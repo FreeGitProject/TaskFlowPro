@@ -1,0 +1,78 @@
+﻿@page "/login"
+@using MudBlazor
+@using TaskFlowPro.Client.Extensions
+@using TaskFlowPro.Client.Services
+@using TaskFlowPro.Shared.Dtos
+@inject IAuthService AuthService
+@inject AuthStateProvider AuthStateProvider
+@inject NavigationManager NavigationManager
+
+<MudCard>
+    <MudCardContent>
+        <MudText Typo="Typo.h4" Class="text-center mb-4">Login</MudText>
+        
+        <MudForm @ref="_form" @bind-IsValid="_isValid" @bind-Errors="_errors">
+            <MudTextField @bind-Value="_model.Email" 
+                          Label="Email" 
+                          For="@(() => _model.Email)"
+                          Required="true"
+                          RequiredError="Email is required"/>
+            
+            <MudTextField @bind-Value="_model.Password" 
+                          Label="Password" 
+                          For="@(() => _model.Password)"
+                          InputType="InputType.Password"
+                          Required="true"
+                          RequiredError="Password is required"/>
+            
+            <MudButton Variant="Variant.Filled" 
+                        Color="Color.Primary" 
+                        FullWidth="true" 
+                        Class="mt-4"
+                        Disabled="@_isLoading"
+                        OnClick="HandleSubmit">
+                Login
+                @if (_isLoading)
+                {
+                    <MudProgressCircular Size="Size.Small" Color="Color.Inherit" Class="ml-2"/>
+                }
+            </MudButton>
+        </MudForm>
+        
+        <MudText Typo="Typo.body2" Class="text-center mt-4">
+            Don't have an account? <MudLink Href="/register">Register</MudLink>
+        </MudText>
+    </MudCardContent>
+</MudCard>
+
+@code {
+    private MudForm _form;
+    private bool _isValid;
+    private string[] _errors = Array.Empty<string>();
+    private bool _isLoading;
+    private readonly LoginRequest _model = new();
+
+    private async Task HandleSubmit()
+    {
+        await _form.Validate();
+        
+        if (!_isValid) return;
+        
+        _isLoading = true;
+        
+        try
+        {
+            var result = await AuthService.Login(_model);
+            await AuthStateProvider.Login(result);
+            NavigationManager.NavigateTo("/");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+}

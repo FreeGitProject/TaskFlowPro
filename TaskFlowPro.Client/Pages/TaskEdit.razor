@@ -1,0 +1,167 @@
+﻿@page "/tasks/edit/{Id:int}"
+@page "/tasks/new"
+@using Microsoft.AspNetCore.Authorization
+@using MudBlazor
+@using TaskFlowPro.Client.Services
+@using TaskFlowPro.Shared.Dtos
+@attribute [Authorize]
+@inject ITaskService TaskService
+@inject IUserService UserService
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="py-4">
+    <MudText Typo="Typo.h4" Class="mb-4">@PageTitle</MudText>
+    
+    <MudPaper Elevation="3" Class="pa-4">
+        <MudForm @ref="_form" @bind-IsValid="_isValid" @bind-Errors="_errors">
+            <MudTextField @bind-Value="_model.Title" 
+                          Label="Title" 
+                          For="@(() => _model.Title)"
+                          Required="true"
+                          RequiredError="Title is required"/>
+            
+            <MudTextField @bind-Value="_model.Description" 
+                          Label="Description" 
+                          For="@(() => _model.Description)"
+                          Lines="3"
+                          Class="mt-4"/>
+            
+            <MudDatePicker @bind-Value="_model.DueDate" 
+                           Label="Due Date" 
+                           Class="mt-4"/>
+            
+            <MudSelect @bind-Value="_model.Status" 
+                       Label="Status" 
+                       Class="mt-4">
+                @foreach (var status in Enum.GetNames(typeof(TaskStatus)))
+                {
+                    <MudSelectItem Value="@status">@status</MudSelectItem>
+                }
+            </MudSelect>
+            
+            <MudSelect @bind-Value="_model.Priority" 
+                       Label="Priority" 
+                       Class="mt-4">
+                @foreach (var priority in Enum.GetNames(typeof(TaskPriority)))
+                {
+                    <MudSelectItem Value="@priority">@priority</MudSelectItem>
+                }
+            </MudSelect>
+            
+            <MudSelect @bind-Value="_model.AssignedToId" 
+                       Label="Assigned To" 
+                       Class="mt-4"
+                       ToStringFunc="GetUserDisplayName">
+                @if (_users != null)
+                {
+                    @foreach (var user in _users)
+                    {
+                        <MudSelectItem Value="@user.Id">@user.DisplayName</MudSelectItem>
+                    }
+                }
+            </MudSelect>
+            
+            <div class="d-flex justify-space-between mt-6">
+                <MudButton Variant="Variant.Text" 
+                            Color="Color.Default" 
+                            OnClick="() => NavigationManager.NavigateTo("/tasks")">
+                    Cancel
+                </MudButton>
+                
+                <MudButton Variant="Variant.Filled" 
+                           Color="Color.Primary" 
+                           Disabled="@_isLoading"
+                           OnClick="HandleSubmit">
+                    @SubmitButtonText
+                    @if (_isLoading)
+                    {
+                        <MudProgressCircular Size="Size.Small" Color="Color.Inherit" Class="ml-2"/>
+                    }
+                </MudButton>
+            </div>
+        </MudForm>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    [Parameter] public int Id { get; set; }
+    
+    private MudForm _form;
+    private bool _isValid;
+    private string[] _errors = Array.Empty<string>();
+    private bool _isLoading;
+    private UpdateTaskDto _model = new();
+    private List<UserDto> _users;
+    
+    private string PageTitle => Id == 0 ? "Create New Task" : "Edit Task";
+    private string SubmitButtonText => Id == 0 ? "Create" : "Update";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _users = await UserService.GetAllUsersAsync();
+        
+        if (Id != 0)
+        {
+            var task = await TaskService.GetTaskByIdAsync(Id);
+            _model = new UpdateTaskDto
+            {
+                Id = task.Id,
+                Title = task.Title,
+                Description = task.Description,
+                DueDate = task.DueDate,
+                Status = task.Status,
+                Priority = task.Priority,
+                AssignedToId = task.AssignedToId
+            };
+        }
+    }
+
+    private string GetUserDisplayName(string userId)
+    {
+        return _users?.FirstOrDefault(u => u.Id == userId)?.DisplayName ?? string.Empty;
+    }
+
+    private async Task HandleSubmit()
+    {
+        await _form.Validate();
+        
+        if (!_isValid) return;
+        
+        _isLoading = true;
+        
+        try
+        {
+            if (Id == 0)
+            {
+                var createDto = new CreateTaskDto
+                {
+                    Title = _model.Title,
+                    Description = _model.Description,
+                    DueDate = _model.DueDate,
+                    Status = _model.Status,
+                    Priority = _model.Priority,
+                    AssignedToId = _model.AssignedToId
+                };
+                
+                await TaskService.CreateTaskAsync(createDto);
+                Snackbar.Add("Task created successfully", Severity.Success);
+            }
+            else
+            {
+                await TaskService.UpdateTaskAsync(_model);
+                Snackbar.Add("Task updated successfully", Severity.Success);
+            }
+            
+            NavigationManager.NavigateTo("/tasks");
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+}

@@ -3,8 +3,8 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using TaskFlowPro.Api.Dtos;
 using TaskFlowPro.Api.Models;
+using TaskFlowPro.Shared.Dtos;
 
 namespace TaskFlowPro.Api.Services
 {

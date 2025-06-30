@@ -1,0 +1,93 @@
+﻿@page "/register"
+@using MudBlazor
+@using TaskFlowPro.Client.Extensions
+@using TaskFlowPro.Client.Services
+@using TaskFlowPro.Shared.Dtos
+@inject IAuthService AuthService
+@inject AuthStateProvider AuthStateProvider
+@inject NavigationManager NavigationManager
+
+<MudCard Class="mx-auto" Style="max-width: 500px;">
+    <MudCardContent>
+        <MudText Typo="Typo.h4" Class="text-center mb-4">Create an Account</MudText>
+        
+        <MudForm @ref="_form" @bind-IsValid="_isValid" @bind-Errors="_errors">
+            <MudTextField @bind-Value="_model.FirstName" 
+                          Label="First Name" 
+                          For="@(() => _model.FirstName)"
+                          Required="true"
+                          RequiredError="First name is required"/>
+            
+            <MudTextField @bind-Value="_model.LastName" 
+                          Label="Last Name" 
+                          For="@(() => _model.LastName)"
+                          Required="true"
+                          RequiredError="Last name is required"
+                          Class="mt-4"/>
+            
+            <MudTextField @bind-Value="_model.Email" 
+                          Label="Email" 
+                          For="@(() => _model.Email)"
+                          Required="true"
+                          RequiredError="Email is required"
+                          Class="mt-4"/>
+            
+            <MudTextField @bind-Value="_model.Password" 
+                          Label="Password" 
+                          For="@(() => _model.Password)"
+                          InputType="InputType.Password"
+                          Required="true"
+                          RequiredError="Password is required"
+                          Class="mt-4"/>
+            
+            <MudButton Variant="Variant.Filled" 
+                       Color="Color.Primary" 
+                       FullWidth="true" 
+                       Class="mt-4"
+                       Disabled="@_isLoading"
+                       OnClick="HandleSubmit">
+                Register
+                @if (_isLoading)
+                {
+                    <MudProgressCircular Size="Size.Small" Color="Color.Inherit" Class="ml-2"/>
+                }
+            </MudButton>
+        </MudForm>
+        
+        <MudText Typo="Typo.body2" Class="text-center mt-4">
+            Already have an account? <MudLink Href="/login">Login</MudLink>
+        </MudText>
+    </MudCardContent>
+</MudCard>
+
+@code {
+    private MudForm _form;
+    private bool _isValid;
+    private string[] _errors = Array.Empty<string>();
+    private bool _isLoading;
+    private readonly RegisterRequest _model = new();
+
+    private async Task HandleSubmit()
+    {
+        await _form.Validate();
+        
+        if (!_isValid) return;
+        
+        _isLoading = true;
+        
+        try
+        {
+            var result = await AuthService.Register(_model);
+            await AuthStateProvider.Login(result);
+            NavigationManager.NavigateTo("/");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+}

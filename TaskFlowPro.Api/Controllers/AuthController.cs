@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using TaskFlowPro.Api.Dtos;
 using TaskFlowPro.Api.Services;
+using TaskFlowPro.Shared.Dtos;
 
 namespace TaskFlowPro.Api.Controllers
 {

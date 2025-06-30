@@ -10,7 +10,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Aspire.Hosting" Version="9.3.2" />
     <PackageReference Include="Aspire.Hosting.AppHost" Version="8.2.2" />
+    <PackageReference Include="Aspire.Hosting.Redis" Version="9.3.1" />
+    <PackageReference Include="Aspire.Hosting.SqlServer" Version="9.3.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\TaskFlowPro.Api\TaskFlowPro.Api.csproj" />
+    <ProjectReference Include="..\..\TaskFlowPro.Client\TaskFlowPro.Client.csproj" />
+    <ProjectReference Include="..\..\TaskFlowPro.Worker\TaskFlowPro.Worker.csproj" />
   </ItemGroup>
 
 </Project>

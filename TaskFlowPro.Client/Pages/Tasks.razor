@@ -1,0 +1,141 @@
+﻿@page "/tasks"
+@using Microsoft.AspNetCore.Authorization
+@using MudBlazor
+@using TaskFlowPro.Client.Services
+@using TaskFlowPro.Shared.Interfaces
+@attribute [Authorize]
+@inject ITaskService TaskService
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+@implements ITaskHubClient
+@implements IDisposable
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="py-4">
+    <MudText Typo="Typo.h4" Class="mb-4">Task Management</MudText>
+    
+    <MudButton Variant="Variant.Filled" 
+               Color="Color.Primary" 
+               StartIcon="@Icons.Material.Filled.Add"
+               OnClick="() => NavigationManager.NavigateTo("/tasks/new")">
+        Create Task
+    </MudButton>
+    
+    <MudGrid Class="mt-4">
+        <MudItem xs="12">
+            <MudPaper Elevation="3" Class="pa-4">
+                @if (_tasks == null)
+                {
+                    <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
+                }
+                else if (!_tasks.Any())
+                {
+                    <MudText>No tasks found</MudText>
+                }
+                else
+                {
+                    <MudTable Items="@_tasks" Hover="true" Breakpoint="Breakpoint.Sm">
+                        <HeaderContent>
+                            <MudTh>Title</MudTh>
+                            <MudTh>Status</MudTh>
+                            <MudTh>Priority</MudTh>
+                            <MudTh>Due Date</MudTh>
+                            <MudTh>Assigned To</MudTh>
+                            <MudTh>Actions</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Title">@context.Title</MudTd>
+                            <MudTd DataLabel="Status">
+                                <MudChip Color="@GetStatusColor(context.Status)" Variant="Variant.Filled">@context.Status</MudChip>
+                            </MudTd>
+                            <MudTd DataLabel="Priority">
+                                <MudChip Color="@GetPriorityColor(context.Priority)" Variant="Variant.Filled">@context.Priority</MudChip>
+                            </MudTd>
+                            <MudTd DataLabel="Due Date">@context.DueDate?.ToShortDateString()</MudTd>
+                            <MudTd DataLabel="Assigned To">@context.AssignedTo</MudTd>
+                            <MudTd DataLabel="Actions">
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit" 
+                                               OnClick="@(() => NavigationManager.NavigateTo($"/tasks/edit/{context.Id}"))"/>
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" 
+                                               OnClick="@(() => DeleteTask(context.Id))"/>
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                }
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code {
+    private List<TaskDto> _tasks;
+    private TaskHubConnection _hubConnection;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTasks();
+        await InitializeSignalR();
+    }
+
+    private async Task LoadTasks()
+    {
+        _tasks = await TaskService.GetAllTasksAsync();
+    }
+
+    private async Task InitializeSignalR()
+    {
+        var factory = await _services.GetRequiredService<Func<ITaskHubClient, Task<TaskHubConnection>>>();
+        _hubConnection = await factory.Invoke(this);
+        await _hubConnection.StartAsync();
+    }
+
+    private async Task DeleteTask(int id)
+    {
+        await TaskService.DeleteTaskAsync(id);
+        _tasks.RemoveAll(t => t.Id == id);
+        Snackbar.Add("Task deleted successfully", Severity.Success);
+        StateHasChanged();
+    }
+
+    private Color GetStatusColor(string status)
+    {
+        return status switch
+        {
+            "New" => Color.Info,
+            "InProgress" => Color.Warning,
+            "Completed" => Color.Success,
+            "OnHold" => Color.Default,
+            "Cancelled" => Color.Error,
+            _ => Color.Default
+        };
+    }
+
+    private Color GetPriorityColor(string priority)
+    {
+        return priority switch
+        {
+            "Low" => Color.Info,
+            "Medium" => Color.Warning,
+            "High" => Color.Error,
+            "Critical" => Color.Error,
+            _ => Color.Default
+        };
+    }
+
+    public Task TaskUpdated(string message)
+    {
+        Snackbar.Add(message, Severity.Info);
+        InvokeAsync(LoadTasks);
+        return Task.CompletedTask;
+    }
+
+    public Task NotificationReceived(string message)
+    {
+        Snackbar.Add(message, Severity.Info);
+        return Task.CompletedTask;
+    }
+
+    public void Dispose()
+    {
+        _hubConnection?.DisposeAsync();
+    }
+}

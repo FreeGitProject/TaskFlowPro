@@ -1,0 +1,43 @@
+﻿@using MudBlazor
+@using TaskFlowPro.Client.Extensions
+@inherits LayoutComponentBase
+
+<MudThemeProvider/>
+<MudDialogProvider/>
+<MudSnackbarProvider/>
+
+<MudLayout>
+    <MudAppBar Elevation="1">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start"/>
+        <MudText Typo="Typo.h6">TaskFlow Pro</MudText>
+        <MudSpacer/>
+        
+        <MudMenu Icon="@Icons.Material.Filled.AccountCircle" Color="Color.Inherit" Direction="Direction.Start">
+            <MudMenuItem Icon="@Icons.Material.Filled.Logout" OnClick="Logout">Logout</MudMenuItem>
+        </MudMenu>
+    </MudAppBar>
+    
+    <MudDrawer>
+        <MudNavMenu>
+            <MudNavLink Href="/tasks" Icon="@Icons.Material.Filled.List">Tasks</MudNavLink>
+            <MudNavLink Href="/notifications" Icon="@Icons.Material.Filled.Notifications">Notifications</MudNavLink>
+        </MudNavMenu>
+    </MudDrawer>
+    
+    <MudMainContent>
+        <MudContainer Class="py-4">
+            @Body
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    [Inject] private AuthStateProvider AuthStateProvider { get; set; }
+    [Inject] private NavigationManager NavigationManager { get; set; }
+
+    private async Task Logout()
+    {
+        await AuthStateProvider.Logout();
+        NavigationManager.NavigateTo("/login");
+    }
+}
