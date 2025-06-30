@@ -1,9 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using TaskFlowPro.Api.Dtos;
-using TaskFlowPro.Api.Models;
 using TaskFlowPro.Api.Services;
+using TaskFlowPro.Shared.Dtos;
 
 namespace TaskFlowPro.Api.Controllers
 {

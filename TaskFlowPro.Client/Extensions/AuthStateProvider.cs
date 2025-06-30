@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Components.Authorization;
 using System.Security.Claims;
 using TaskFlowPro.Shared.Dtos;
-
+using Blazored.LocalStorage;
 namespace TaskFlowPro.Client.Extensions
 {
     public class AuthStateProvider : AuthenticationStateProvider

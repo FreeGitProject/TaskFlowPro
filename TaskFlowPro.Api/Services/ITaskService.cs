@@ -1,4 +1,4 @@
-﻿using TaskFlowPro.Api.Dtos;
+﻿using TaskFlowPro.Shared.Dtos;
 
 namespace TaskFlowPro.Api.Services
 {

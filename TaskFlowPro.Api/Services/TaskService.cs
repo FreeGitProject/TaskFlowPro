@@ -1,10 +1,9 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using TaskFlowPro.Api.Data;
-using TaskFlowPro.Api.Dtos;
 using TaskFlowPro.Api.Hubs;
 using TaskFlowPro.Api.Models;
-
+using TaskFlowPro.Shared.Dtos;
 using TaskStatus = TaskFlowPro.Api.Models.TaskStatus;
 
 namespace TaskFlowPro.Api.Services

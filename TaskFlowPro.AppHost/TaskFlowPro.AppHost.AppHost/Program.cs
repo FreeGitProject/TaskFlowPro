@@ -14,7 +14,8 @@ var apiService = builder.AddProject<Projects.TaskFlowPro_Api>("api")
     .WithReference(sqlServer)       // Links the SQL dependency
     .WithReference(redis)           // Optional: if API uses Redis
     .WithEnvironment("ASPNETCORE_ENVIRONMENT", "Development")
-.WithEndpoint(port: 5000, scheme: "http");
+.WithEndpoint(name: "api-http", port: 5000, scheme: "http");
+
 
 
 // Add Worker service (background processing, etc.)
@@ -26,7 +27,8 @@ var workerService = builder.AddProject<Projects.TaskFlowPro_Worker>("worker")
 var client = builder.AddProject<Projects.TaskFlowPro_Client>("client")
     .WithReference(apiService)
     .WithEnvironment("ASPNETCORE_ENVIRONMENT", "Development")
-    .WithEndpoint(port: 5001, scheme: "http");
+    .WithEndpoint(name: "client-http", port: 5001, scheme: "http");
+
 
 
 // Build and run the entire distributed application
